@@ -141,28 +141,6 @@ model-viewer{position:relative;z-index:2;display:block;width:100%;height:100%;mi
 #loader.on i{animation:blink .7s ease-in-out 2}
 @keyframes blink{0%,100%{transform:scale(0)}50%{transform:scale(1)}}
 
-
-/* MENU LATERAL, AJUDA E CONTAS — interface preparada para integração segura */
-.menu-trigger{flex:0 0 auto;font-size:20px;min-width:42px;padding:9px 11px}
-.drawer-scrim{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.68);backdrop-filter:blur(4px)}
-.drawer-scrim[hidden]{display:none}
-.side-drawer{position:fixed;z-index:71;inset:0 auto 0 0;width:min(350px,88vw);padding:20px;overflow-y:auto;background:#141414;border-right:1px solid #343434;transform:translateX(-105%);visibility:hidden;transition:transform .25s ease,visibility .25s;box-shadow:20px 0 80px #0007}
-.side-drawer.open{transform:translateX(0);visibility:visible}
-.drawer-head{display:flex;align-items:center;justify-content:space-between;padding-bottom:22px;margin-bottom:12px;border-bottom:1px solid var(--border)}
-.drawer-brand{font-weight:950;font-size:24px;letter-spacing:-1.3px}.drawer-brand span{color:var(--accent)}.drawer-brand small{display:block;margin-top:3px;color:#888;font-size:9px;letter-spacing:2.5px}
-.drawer-label{margin:22px 0 8px;color:#777;font-size:10px;font-weight:900;letter-spacing:1.8px}
-.drawer-link{display:flex;align-items:center;gap:12px;width:100%;padding:12px;border:1px solid transparent;border-radius:10px;color:#eee;background:transparent;text-align:left;font-weight:650;font-size:13px}
-.drawer-link span{display:inline-grid;place-items:center;width:25px;color:var(--accent);font-size:19px}
-.drawer-link:hover,.drawer-link:focus-visible{border-color:#454545;background:#202020}
-.drawer-foot{margin-top:26px;padding-top:16px;border-top:1px solid var(--border);color:#aaa;font-size:11px;line-height:1.8}.drawer-foot span{color:#777}
-.info-modal{width:min(620px,100%)}.info-content{padding:24px}.info-content h2{margin:10px 0;font-size:clamp(25px,4vw,34px);letter-spacing:-1px}.info-lead{color:#aaa;font-size:13px;line-height:1.7}
-.info-content details{padding:15px 0;border-bottom:1px solid var(--border)}.info-content summary{cursor:pointer;font-size:13px;font-weight:800}.info-content details p{color:#aaa;font-size:12px;line-height:1.7;margin-bottom:0}
-.notice-panel{margin:18px 0;padding:15px;border:1px solid rgba(215,255,56,.22);border-radius:12px;background:rgba(215,255,56,.045)}.notice-panel strong{color:var(--accent);font-size:12px}.notice-panel p{margin:6px 0 0;color:#bbb;font-size:12px;line-height:1.65}
-.account-tabs{display:flex;gap:8px;margin:18px 0}.account-tabs button{flex:1}
-.account-list{padding-left:19px;color:#bbb;font-size:12px;line-height:2}
-.status-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid var(--border);font-size:12px}.status-row b{font-size:11px}.status-ready{color:var(--accent)}.status-pending{color:#aaa}
-@media(max-width:680px){.topbar{gap:8px}.menu-trigger{min-width:38px;padding:8px}.logo{font-size:22px}.header-actions{gap:5px}.header-actions .btn{padding:8px;font-size:11px}.seller-button{display:none}.info-content{padding:18px}}
-
 @media(max-width:1050px){
 .product-grid,.category-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .product-detail{grid-template-columns:1fr 1fr;gap:16px}
@@ -199,22 +177,20 @@ main{padding:0 4% 40px}
 footer{padding:24px 4%}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 <noscript><p style="padding:20px;text-align:center">Ative o JavaScript para ver a loja.</p></noscript>
 <header>
   <div class="topbar">
-    <button class="menu-trigger btn btn-quiet" id="menuTrigger" aria-label="Abrir menu lateral" aria-controls="sideDrawer" aria-expanded="false">☰</button>
-    <button class="logo" onclick="goHome();closeDrawer()" aria-label="SAINT X início">SAINT <span>X</span></button>
+    <button class="logo" onclick="goHome()" aria-label="SAINT X início">SAINT <span>X</span></button>
     <label class="search">
       <span aria-hidden="true">⌕</span>
       <input id="searchInput" type="search" placeholder="Buscar produtos, games, tecnologia..." autocomplete="off">
     </label>
     <div class="header-actions">
       <button class="btn btn-quiet" id="soundBtn" aria-label="Ligar ou desligar o som"></button>
-      <button class="btn btn-quiet seller-button" onclick="openAccount('seller')">Vender</button>
-      <button class="btn btn-quiet account-button" onclick="openAccount('customer')">Entrar</button>
       <button class="btn btn-quiet" onclick="showCart()">Carrinho <span class="cart-count" id="cartCount">0</span></button>
     </div>
   </div>
@@ -271,51 +247,6 @@ footer{padding:24px 4%}}
   </div>
 </footer>
 
-<!-- MENU LATERAL SAINT X -->
-<div class="drawer-scrim" id="drawerScrim" hidden></div>
-<aside class="side-drawer" id="sideDrawer" aria-label="Menu principal" aria-hidden="true">
-  <div class="drawer-head"><div class="drawer-brand">SAINT <span>X</span><small>MARKETPLACE</small></div><button class="close-btn" id="drawerClose" aria-label="Fechar menu">×</button></div>
-  <button class="drawer-link" data-drawer-action="home"><span>⌂</span> Início</button>
-  <div class="drawer-label">CATEGORIAS</div>
-  <div id="drawerCategories"></div>
-  <div class="drawer-label">SUA CONTA</div>
-  <button class="drawer-link" data-drawer-action="customer"><span>♙</span> Entrar / Criar conta</button>
-  <button class="drawer-link" data-drawer-action="seller"><span>◇</span> Área do vendedor</button>
-  <button class="drawer-link" data-drawer-action="help"><span>?</span> Central de ajuda</button>
-  <button class="drawer-link" data-drawer-action="status"><span>◉</span> Status da plataforma</button>
-  <div class="drawer-foot">SAINT X · Protótipo em desenvolvimento<br><span>Pagamentos ainda desativados</span></div>
-</aside>
-
-<!-- CENTRAL DE AJUDA -->
-<div class="overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-label="Central de ajuda" data-overlay>
-  <div class="modal info-modal"><div class="modal-head"><strong>CENTRAL DE AJUDA <span style="color:var(--accent)">/ SX</span></strong><button class="close-btn" data-close="helpOverlay" aria-label="Fechar">×</button></div>
-    <div class="info-content"><div class="eyebrow">SUPORTE SAINT X</div><h2>Como podemos ajudar?</h2><p class="info-lead">Consulte as informações do protótipo. O atendimento real será conectado depois, com registro seguro de solicitações.</p>
-      <details open><summary>Como faço uma compra?</summary><p>Por enquanto, você pode explorar produtos e testar o carrinho. O checkout ainda não cobra nem envia pedidos.</p></details>
-      <details><summary>Como posso vender na SAINT X?</summary><p>A área do vendedor está em preparação. Antes de publicar produtos, serão necessários cadastro, verificação de identidade e regras de segurança no servidor.</p></details>
-      <details><summary>Meus dados estão salvos no banco?</summary><p>Esta versão ainda não está conectada ao Supabase. Não informe senhas, documentos ou dados bancários neste protótipo.</p></details>
-      <details><summary>Como entro em contato?</summary><p>Canal de atendimento ainda não configurado. Esta seção é uma prévia da futura central de suporte.</p></details>
-      <div class="notice-panel"><strong>Importante</strong><p>Não envie dados pessoais por este protótipo. O suporte com envio de mensagens será ativado depois de configurarmos autenticação e permissões.</p></div>
-    </div>
-  </div>
-</div>
-
-<!-- CONTA / ÁREA DO VENDEDOR (PRÉVIA VISUAL; NÃO AUTENTICA AINDA) -->
-<div class="overlay" id="accountOverlay" role="dialog" aria-modal="true" aria-label="Conta SAINT X" data-overlay>
-  <div class="modal info-modal"><div class="modal-head"><strong id="accountHeading">CONTA SAINT X</strong><button class="close-btn" data-close="accountOverlay" aria-label="Fechar">×</button></div>
-    <div class="info-content"><div class="eyebrow">ACESSO SEGURO EM PREPARAÇÃO</div><h2 id="accountTitle">Entre na SAINT X</h2><p class="info-lead" id="accountLead">Esta é apenas a prévia da interface. O login real será conectado ao Supabase Auth após configurarmos o banco e as políticas de segurança.</p>
-      <div class="account-tabs"><button class="btn btn-primary" id="customerTab" type="button" onclick="openAccount('customer')">Cliente</button><button class="btn" id="sellerTab" type="button" onclick="openAccount('seller')">Vendedor</button></div>
-      <div class="notice-panel"><strong>Cadastro ainda não ativo</strong><p>Não digite nem envie senha, CPF, documento ou dados pessoais nesta versão. Os campos de autenticação serão habilitados somente quando o Supabase estiver configurado e testado.</p></div>
-      <ul class="account-list"><li>Autenticação real e recuperação de senha</li><li>Perfil de cliente separado do perfil de vendedor</li><li>Verificação de vendedor processada com controle de acesso</li><li>Permissões e dados protegidos por RLS no banco</li></ul>
-    </div>
-  </div>
-</div>
-
-<div class="overlay" id="statusOverlay" role="dialog" aria-modal="true" aria-label="Status da plataforma" data-overlay>
-  <div class="modal info-modal"><div class="modal-head"><strong>STATUS <span style="color:var(--accent)">/ SAINT X</span></strong><button class="close-btn" data-close="statusOverlay" aria-label="Fechar">×</button></div>
-    <div class="info-content"><div class="eyebrow">AMBIENTE DE DESENVOLVIMENTO</div><h2>Construindo com segurança.</h2><div class="status-row"><span>Interface do catálogo</span><b class="status-ready">Prévia disponível</b></div><div class="status-row"><span>Banco de dados Supabase</span><b class="status-pending">A configurar</b></div><div class="status-row"><span>Login e contas</span><b class="status-pending">Ainda não ativo</b></div><div class="status-row"><span>Pagamentos e pedidos reais</span><b class="status-pending">Desativados</b></div><p class="info-lead">Este painel mostra o estado planejado do protótipo, não um monitoramento automático dos serviços.</p></div>
-  </div>
-</div>
-
 <!-- DETALHES DO PRODUTO -->
 <div class="overlay" id="productOverlay" role="dialog" aria-modal="true" aria-label="Detalhes do produto" data-overlay>
   <div class="modal">
@@ -343,10 +274,39 @@ footer{padding:24px 4%}}
 
 <script>
 "use strict";
+// ===== CONEXÃO SAINT X COM SUPABASE =====
+// Substitua os dois valores abaixo pelos dados públicos do SEU projeto Supabase.
+// Use Project URL + Publishable key (ou a antiga chave anon). Nunca use service_role/secret aqui.
+const SUPABASE_URL = "COLE_AQUI_A_PROJECT_URL";
+const SUPABASE_PUBLISHABLE_KEY = "COLE_AQUI_A_CHAVE_PUBLICA";
+
+if (!window.supabase) {
+  console.error("SAINT X: biblioteca Supabase não carregada.");
+} else if (
+  SUPABASE_URL === "COLE_AQUI_A_PROJECT_URL" ||
+  SUPABASE_PUBLISHABLE_KEY === "COLE_AQUI_A_CHAVE_PUBLICA"
+) {
+  console.warn("SAINT X: faltam configurar as credenciais públicas do Supabase.");
+} else {
+  window.saintxDB = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY,
+    {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      }
+    }
+  );
+  console.info("SAINT X: cliente Supabase inicializado.");
+}
+// ===== FIM DA CONEXÃO INICIAL =====
+
 /*
   SAINT X — protótipo front-end.
-  Carrinho local de demonstração. A tela de conta não autentica usuários.
-  Não inserir dados pessoais até concluir a integração Supabase + RLS.
+  O carrinho usa localStorage neste navegador. Para vender de verdade é
+  preciso backend, estoque, autenticação, banco de dados e pagamentos.
 */
 
 const SKETCHFAB_ID = "dea9a2e9350a48a9a32b3a57b4df8329";
@@ -367,7 +327,7 @@ const products = [
   {id:"dualsense",name:"Controle Sony DualSense PS5",category:"Games e consoles",price:449.90,emoji:"🎮",tag:"Modelo 3D",
    description:"Controle sem fio DualSense para PlayStation 5. Explore a visualização 3D interativa e escolha a variante desejada.",
    colors:["Branco e preto","Preto","Vermelho","Azul"],model3d:true,hero:true,
-   glb:"dual-sense2.glb",poster:"", /* se o .glb não existir, usa o Sketchfab */
+   glb:"models/dualsense.glb",poster:"models/dualsense-poster.webp", /* se o .glb não existir, usa o Sketchfab */
    image:"" /* coloque aqui a URL de uma foto real para trocar a ilustração */},
   {id:"headset",name:"Headset gamer",category:"Games e consoles",price:249.90,emoji:"🎧",tag:"Gaming",description:"Headset para suas sessões de jogos. Produto demonstrativo: confirme as especificações da versão real antes da compra."},
   {id:"keyboard",name:"Teclado mecânico RGB",category:"Games e consoles",price:299.90,emoji:"⌨️",tag:"Setup",description:"Teclado mecânico para montar seu setup gamer."},
@@ -821,43 +781,9 @@ function closeOverlay(id) {
   if (lastFocus && lastFocus.isConnected) lastFocus.focus({preventScroll:true});
 }
 
-/* ===== MENU, AJUDA, CONTAS E STATUS ===== */
-function openDrawer(){
-  const drawer=$("#sideDrawer"),scrim=$("#drawerScrim");
-  drawer.classList.add("open");drawer.setAttribute("aria-hidden","false");
-  scrim.hidden=false;document.body.classList.add("locked");$("#menuTrigger").setAttribute("aria-expanded","true");
-  $("#drawerClose").focus({preventScroll:true});
-}
-function closeDrawer(){
-  const drawer=$("#sideDrawer"),scrim=$("#drawerScrim");
-  drawer.classList.remove("open");drawer.setAttribute("aria-hidden","true");scrim.hidden=true;
-  if(!document.querySelector(".overlay.open"))document.body.classList.remove("locked");
-  $("#menuTrigger").setAttribute("aria-expanded","false");
-}
-function renderDrawerCategories(){
-  const target=$("#drawerCategories");if(!target)return;
-  target.innerHTML=categories.filter(c=>c.name!=="Todos").map(c=>`<button class="drawer-link" data-drawer-cat="${safeText(c.name)}"><span>${c.icon}</span>${safeText(c.name)}</button>`).join("");
-}
-function openAccount(kind){
-  const seller=kind==="seller";
-  $("#accountHeading").textContent=seller?"ÁREA DO VENDEDOR":"CONTA SAINT X";
-  $("#accountTitle").textContent=seller?"Prepare sua loja.":"Sua conta SAINT X.";
-  $("#accountLead").textContent=seller?"A área do vendedor terá cadastro separado, publicação de produtos e verificação de identidade. Nenhum cadastro é enviado nesta prévia.":"A conta de cliente terá autenticação, pedidos e dados pessoais protegidos. O login real será conectado ao Supabase Auth depois da configuração do banco.";
-  $("#customerTab").classList.toggle("btn-primary",!seller);$("#sellerTab").classList.toggle("btn-primary",seller);
-  closeDrawer();lastFocus=document.activeElement;$("#accountOverlay").classList.add("open");document.body.classList.add("locked");$("#accountOverlay .close-btn").focus({preventScroll:true});
-}
-function openHelp(){closeDrawer();lastFocus=document.activeElement;$("#helpOverlay").classList.add("open");document.body.classList.add("locked");$("#helpOverlay .close-btn").focus({preventScroll:true});}
-function openStatus(){closeDrawer();lastFocus=document.activeElement;$("#statusOverlay").classList.add("open");document.body.classList.add("locked");$("#statusOverlay .close-btn").focus({preventScroll:true});}
-
 /* ===== EVENTOS ===== */
 document.addEventListener("click",event => {
   const t = event.target;
-  if(t.closest("#menuTrigger")) return openDrawer();
-  if(t.closest("#drawerClose") || t.closest("#drawerScrim")) return closeDrawer();
-  const drawerAction=t.closest("[data-drawer-action]");
-  if(drawerAction){const action=drawerAction.dataset.drawerAction;if(action==="home"){closeDrawer();goHome();}else if(action==="customer"||action==="seller")openAccount(action);else if(action==="help")openHelp();else if(action==="status")openStatus();return;}
-  const drawerCat=t.closest("[data-drawer-cat]");
-  if(drawerCat){const cat=drawerCat.dataset.drawerCat;closeDrawer();selectCategory(cat);return;}
   const overlay = t.matches("[data-overlay]") ? t : null;
   if (overlay) return closeOverlay(overlay.id);
 
@@ -883,10 +809,6 @@ document.addEventListener("keydown",event => {
   if (event.key === "Escape") {
     closeOverlay("cartOverlay");
     closeOverlay("productOverlay");
-    closeOverlay("helpOverlay");
-    closeOverlay("accountOverlay");
-    closeOverlay("statusOverlay");
-    closeDrawer();
   }
 });
 
@@ -895,7 +817,6 @@ $("#sortSelect").addEventListener("change",renderProducts);
 $("#soundBtn").addEventListener("click",toggleSound);
 
 $("#year").textContent = new Date().getFullYear();
-renderDrawerCategories();
 paintSoundBtn();
 renderCategories();
 renderProducts();
